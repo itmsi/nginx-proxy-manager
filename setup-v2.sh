@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Script Setup Nginx Proxy Manager
-# Jalankan dengan: chmod +x setup.sh && ./setup.sh
+# Script Setup Nginx Proxy Manager untuk Docker Compose v2
+# Jalankan dengan: chmod +x setup-v2.sh && ./setup-v2.sh
 
 set -e
 
-echo "🚀 Setup Nginx Proxy Manager dengan Docker"
-echo "=========================================="
+echo "🚀 Setup Nginx Proxy Manager dengan Docker Compose v2"
+echo "=================================================="
 
 # Cek apakah Docker terinstall
 if ! command -v docker &> /dev/null; then
@@ -14,19 +14,13 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-# Cek apakah Docker Compose terinstall (versi 1 atau 2)
-if command -v docker-compose &> /dev/null; then
-    COMPOSE_CMD="docker-compose"
-    echo "✅ Docker Compose v1 ditemukan"
-elif docker compose version &> /dev/null; then
-    COMPOSE_CMD="docker compose"
-    echo "✅ Docker Compose v2 ditemukan"
-else
-    echo "❌ Docker Compose tidak ditemukan. Silakan install Docker Compose terlebih dahulu."
+# Cek apakah Docker Compose v2 terinstall
+if ! docker compose version &> /dev/null; then
+    echo "❌ Docker Compose v2 tidak ditemukan. Silakan install Docker Compose terlebih dahulu."
     exit 1
 fi
 
-echo "✅ Docker dan Docker Compose sudah terinstall"
+echo "✅ Docker dan Docker Compose v2 sudah terinstall"
 
 # Buat file .env jika belum ada
 if [ ! -f .env ]; then
@@ -43,38 +37,13 @@ echo "📁 Membuat direktori untuk data..."
 mkdir -p data mysql letsencrypt
 echo "✅ Direktori berhasil dibuat"
 
-# Cek apakah port sudah digunakan
-echo "🔍 Mengecek port yang digunakan..."
-
-check_port() {
-    local port=$1
-    if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
-        echo "⚠️  Port $port sudah digunakan"
-        return 1
-    else
-        echo "✅ Port $port tersedia"
-        return 0
-    fi
-}
-
-ports_available=true
-check_port 80 || ports_available=false
-check_port 81 || ports_available=false
-check_port 443 || ports_available=false
-
-if [ "$ports_available" = false ]; then
-    echo "❌ Beberapa port sudah digunakan. Silakan hentikan service yang menggunakan port tersebut atau edit docker-compose.yml"
-    echo "💡 Anda bisa mengubah mapping port di docker-compose.yml"
-    exit 1
-fi
-
 # Pull image terbaru
 echo "📥 Mengunduh image Docker..."
-$COMPOSE_CMD pull
+docker compose pull
 
 # Jalankan container
 echo "🚀 Menjalankan Nginx Proxy Manager..."
-$COMPOSE_CMD up -d
+docker compose up -d
 
 # Tunggu beberapa detik untuk container start
 echo "⏳ Menunggu container start..."
@@ -82,10 +51,10 @@ sleep 10
 
 # Cek status container
 echo "📊 Status container:"
-$COMPOSE_CMD ps
+docker compose ps
 
 # Cek apakah container berjalan
-if $COMPOSE_CMD ps | grep -q "Up"; then
+if docker compose ps | grep -q "Up"; then
     echo ""
     echo "🎉 Setup berhasil!"
     echo "=========================================="
@@ -100,7 +69,13 @@ if $COMPOSE_CMD ps | grep -q "Up"; then
     echo "   3. Setup SSL certificate untuk production"
     echo ""
     echo "📚 Dokumentasi lengkap ada di README.md"
+    echo ""
+    echo "🔧 Perintah berguna:"
+    echo "   docker compose ps          # Cek status"
+    echo "   docker compose logs        # Cek logs"
+    echo "   docker compose down        # Stop container"
+    echo "   docker compose restart     # Restart container"
 else
     echo "❌ Container gagal start. Cek logs dengan:"
-    echo "   $COMPOSE_CMD logs"
+    echo "   docker compose logs"
 fi

@@ -35,12 +35,29 @@ nano .env
 
 ### 3. Jalankan Setup
 
+#### Opsi A: Menggunakan Script Otomatis
+
+**Untuk Docker Compose v1 (docker-compose):**
+```bash
+./setup.sh
+```
+
+**Untuk Docker Compose v2 (docker compose):**
+```bash
+./setup-v2.sh
+```
+
+#### Opsi B: Setup Manual
+
 ```bash
 # Buat direktori untuk data
 mkdir -p data mysql letsencrypt
 
-# Jalankan container
+# Untuk Docker Compose v1
 docker-compose up -d
+
+# Untuk Docker Compose v2
+docker compose up -d
 ```
 
 ### 4. Akses Web Interface
